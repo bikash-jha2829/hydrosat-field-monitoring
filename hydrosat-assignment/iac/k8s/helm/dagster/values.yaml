@@ -1,0 +1,28 @@
+# Dagster User Deployments
+dagster-user-deployments:
+  deployments:
+    - name: "dagster-dags"
+      image:
+        repository: "dagster-app"
+        tag: latest
+        pullPolicy: Never  # Local k3d image
+      dagsterApiGrpcArgs:
+        - "--python-file"
+        - "/app/src/plantation_monitoring/definitions.py"
+      port: 3030
+      includeConfigInLaunchedRuns:
+        enabled: true
+      envConfigMaps:
+        - name: dagster-env
+      envSecrets:
+        - name: dagster-secret
+      readinessProbe:
+        enabled: true
+        periodSeconds: 20
+        timeoutSeconds: 10
+
+# Dagster Webserver
+dagsterWebserver:
+  service:
+    type: LoadBalancer  # k3d's servicelb handles this automatically
+    port: 80

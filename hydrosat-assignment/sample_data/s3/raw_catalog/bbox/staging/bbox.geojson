@@ -1,0 +1,33 @@
+{
+    "type": "FeatureCollection",
+    "features": [
+      {
+        "type": "Feature",
+        "properties": {
+        "name": "South Imperial Valley - Bonds Corner East",
+        "region": "Imperial County, CA",
+        "nearest_towns": ["Heber", "Holtville", "Calexico"],
+        "primary_feature": "Intensive Agriculture",
+        "hydrology": "Alamo River Basin (Eastern Edge)",
+        "irrigation_source": "Colorado River via All-American Canal",
+        "sentinel_tile_id": "11SPS",
+        "epsg_code": 32611,
+        "typical_crops_winter": ["Lettuce", "Broccoli", "Carrots", "Spinach"],
+        "typical_crops_summer": ["Alfalfa", "Bermuda Grass", "Sudan Grass", "Cotton"],
+        "approx_area_hectares": 2850
+        },
+        "geometry": {
+        "coordinates": [
+          [
+            [ -115.48250487776336, 32.74497142550713 ],
+            [ -115.48250487776336, 32.70162939963497 ],
+            [ -115.41975068453395, 32.70162939963497 ],
+            [ -115.41975068453395, 32.74497142550713 ],
+            [ -115.48250487776336, 32.74497142550713 ]
+          ]
+        ],
+        "type": "Polygon"
+        }
+      }
+    ]
+  }
