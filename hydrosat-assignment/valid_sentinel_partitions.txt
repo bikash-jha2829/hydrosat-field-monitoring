@@ -1,0 +1,35 @@
+# Valid Sentinel-2 Partitions (Both NDVI and NDMI Available)
+# Generated: 2025-11-30 22:45:36
+# Date Range: 2025-10-11 to 2025-11-30
+# Cloud Cover: < 30%
+
+2025-10-11|field_1
+2025-10-11|field_2
+2025-10-11|field_3
+2025-10-16|field_1
+2025-10-16|field_2
+2025-10-16|field_3
+2025-10-18|field_1
+2025-10-18|field_2
+2025-10-18|field_3
+2025-10-26|field_1
+2025-10-26|field_2
+2025-10-26|field_3
+2025-10-31|field_1
+2025-10-31|field_2
+2025-10-31|field_3
+2025-11-05|field_1
+2025-11-05|field_2
+2025-11-05|field_3
+2025-11-07|field_1
+2025-11-07|field_2
+2025-11-07|field_3
+2025-11-10|field_1
+2025-11-10|field_2
+2025-11-10|field_3
+2025-11-20|field_1
+2025-11-20|field_2
+2025-11-20|field_3
+2025-11-25|field_1
+2025-11-25|field_2
+2025-11-25|field_3

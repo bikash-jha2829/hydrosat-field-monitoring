@@ -1,0 +1,83 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "object-type": "field",
+        "object-id": "field_1",
+        "plant-type": "Winter Lettuce (Iceberg or Romaine)",
+        "plant-date": "2024-10-11",
+        "current_status": "Active Growth",
+        "visual_observation": "Patchy Green / Row Structure",
+        "est_ndvi_value": "0.35 - 0.50 (Rising)",
+        "seasonality_note": "Winter vegetable crop; will be harvested Jan/Feb.",
+        "irrigation_type": "Furrow / Sprinkler Germination"
+      },
+      "geometry": {
+        "coordinates": [
+          [
+            [-115.456431, 32.72288],
+            [-115.456431, 32.715877],
+            [-115.448048, 32.715877],
+            [-115.448048, 32.72288],
+            [-115.456431, 32.72288]
+          ]
+        ],
+        "type": "Polygon"
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "object-type": "field",
+        "object-id": "field_2",
+        "plant-type": "Cotton",
+        "plant-date": "2025-10-05",
+        "current_status": "Harvested / Stubble",
+        "visual_observation": "Grey/Brown with White specks (Lint residue) or Bare Soil",
+        "est_ndvi_value": "0.15 - 0.25 (Non-Vegetated)",
+        "seasonality_note": "Cotton is defoliated and harvested by Nov. Field likely contains dry stalks or is being plowed (disked) for winter.",
+        "irrigation_type": "Furrow / Drip"
+      },
+      "geometry": {
+        "coordinates": [
+          [
+            [-115.447849, 32.730159],
+            [-115.447849, 32.723219],
+            [-115.439428, 32.723219],
+            [-115.439428, 32.730159],
+            [-115.447849, 32.730159]
+          ]
+        ],
+        "type": "Polygon"
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "object-type": "field",
+        "object-id": "field_3",
+        "plant-type": "Summer Grass (Sudan or Bermuda)",
+        "plant-date": "2025-10-10",
+        "current_status": "Dormant or Harvested",
+        "visual_observation": "Brown/Tan (Dormant) or Stubble",
+        "est_ndvi_value": "0.20 - 0.35 (Low/Dropping)",
+        "seasonality_note": "If Bermuda: It goes dormant (brown) in winter. If Sudan: It is an annual and has likely been cut and removed.",
+        "irrigation_type": "Flood / Border Check"
+      },
+      "geometry": {
+        "coordinates": [
+          [
+            [-115.464678, 32.733914],
+            [-115.464678, 32.730515],
+            [-115.456597, 32.730515],
+            [-115.456597, 32.733914],
+            [-115.464678, 32.733914]
+          ]
+        ],
+        "type": "Polygon"
+      }
+    }
+  ]
+}

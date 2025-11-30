@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: dagster-env
+  namespace: dagster
+data:
+  # AWS/MinIO Configuration
+  AWS_REGION: "eu-west-1"
+  AWS_S3_ENDPOINT: "http://minio-external.dagster.svc.cluster.local:9000"
+  AWS_S3_PIPELINE_BUCKET_NAME: "hydrosat-pipeline-insights"
+  AWS_S3_USE_SSL: "false"
+  
+  # STAC API
+  STAC_API_URL: "https://planetarycomputer.microsoft.com/api/stac/v1"
+  
+  # Python
+  TMP_DIR: "/tmp"
+  PYTHONPATH: "/app/src"
