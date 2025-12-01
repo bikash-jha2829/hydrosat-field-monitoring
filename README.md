@@ -26,6 +26,9 @@ The system ingests Sentinel-2 satellite imagery based on field geometries and da
 - **Winter Crops**: Lettuce (Iceberg/Romaine), Broccoli, Carrots, Spinach
 - **Summer Crops**: Cotton, Alfalfa, Bermuda Grass, Sudan Grass
 
+  ![out2](https://github.com/user-attachments/assets/ec46eb3a-f1ac-4eff-ae0e-dbc93f4388f7)
+
+
 ### Why Catalog Raw Data?
 
 To maintain an internal archive, avoid future data loss, and reduce egress costs from commercial providers. By cataloging processed data in STAC format, we enable efficient querying and reuse without repeated API calls to external providers.
