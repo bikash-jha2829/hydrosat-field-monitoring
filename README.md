@@ -20,6 +20,12 @@ This pipeline enables automated processing of satellite imagery from Sentinel-2 
 
 The system ingests Sentinel-2 satellite imagery based on field geometries and date ranges, processes raw satellite data to compute spectral indices (NDVI and NDMI), stores processed results in S3-compatible storage, publishes results to a STAC (SpatioTemporal Asset Catalog) for easy querying, and provides a FastAPI interface for querying field health data.
 
+**Geographic Coverage**: The pipeline is currently configured for **Imperial County, California, USA** (South Imperial Valley region), with Sentinel-2 tile ID `11SPS`. The system processes fields in the Alamo River Basin area, irrigated via the Colorado River through the All-American Canal.
+
+**Crop Types Supported**:
+- **Winter Crops**: Lettuce (Iceberg/Romaine), Broccoli, Carrots, Spinach
+- **Summer Crops**: Cotton, Alfalfa, Bermuda Grass, Sudan Grass
+
 ### Why Catalog Raw Data?
 
 To maintain an internal archive, avoid future data loss, and reduce egress costs from commercial providers. By cataloging processed data in STAC format, we enable efficient querying and reuse without repeated API calls to external providers.
@@ -343,4 +349,4 @@ def field_ndvi(context: AssetExecutionContext, bbox: Bbox, fields: list[Field], 
 
 ---
 
-**Built with** 🌱 **for sustainable agriculture and efficient field monitoring**
+**🌱 Please Reach out in case of any questions**
