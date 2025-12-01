@@ -318,27 +318,23 @@ def field_ndvi(context: AssetExecutionContext, bbox: Bbox, fields: list[Field], 
 - **Consider Code Location Splitting**: For very large deployments (>5000 assets), split assets across multiple code locations to reduce per-location load times
 
 ## 🔮 Future Improvements
+1. Backfill of delayed data
+2. TF state management on dynamoDB/Tf cloud
+3. Use xarray instead of Rasterio
 
-### Short Term
+## 🙏 Acknowledgments
 
-- Additional spectral indices (EVI, SAVI, NDWI) for enhanced analysis
-- Multi-satellite support (Landsat, MODIS) for increased temporal resolution
-- Advanced filtering options for cloud cover and data quality
-- Batch processing optimizations for large-scale operations
+**AI Assistance:**
+- Used ChatGPT for research on Dagster framework concepts and best practices
+- AI assistance with writing the Makefile for project automation
+- AI help with documentation formatting, emoji usage, and structure
+- AI assistance with writing docstrings for code documentation
 
-### Medium Term
+**Code Development:**
+- All code implementation was written independently
+- Core logic, algorithms, and business logic developed from scratch
+- Architecture and design decisions made independently
 
-- Machine learning integration for crop yield prediction and disease detection
-- Automated alerting system for fields requiring immediate attention
-- Web-based dashboard for real-time field monitoring
-- Historical trend analysis and forecasting capabilities
-
-### Long Term
-
-- Real-time processing pipeline for near-instantaneous updates
-- Multi-region support for scaling to multiple geographic areas
-- Advanced analytics with anomaly detection and predictive modeling
-- Integration with farm management systems and IoT sensors
 
 ## 📚 Additional Resources
 
