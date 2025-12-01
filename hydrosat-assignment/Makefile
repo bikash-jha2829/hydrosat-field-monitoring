@@ -87,17 +87,17 @@ setup:
 	@$(MAKE) -C $(TERRAFORM_DIR) import-namespace 2>/dev/null || echo "  📝 Namespace will be managed by Terraform"
 	@$(MAKE) -C $(TERRAFORM_DIR) import-bucket 2>/dev/null || echo "  📝 S3 bucket will be created"
 	@echo ""
-	@echo "7️⃣  Loading sample data to S3 (before Dagster starts)..."
-	@$(SCRIPTS_DIR)/s3-load.sh
-	@echo ""
-	@echo "8️⃣  Deploying infrastructure (this takes 2-5 minutes)..."
+	@echo "7️⃣  Deploying infrastructure (this takes 2-5 minutes)..."
 	@$(MAKE) -C $(TERRAFORM_DIR) apply
+	@echo ""
+	@echo "8️⃣  Loading sample data to S3 (after bucket is created)..."
+	@$(SCRIPTS_DIR)/s3-load.sh
 	@echo ""
 	@echo "9️⃣  Waiting for Dagster pods to be ready..."
 	@kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=dagster -n $(K8S_DAGSTER_NAMESPACE) --timeout=300s 2>/dev/null || \
 		(echo "⚠️  Some pods still starting, continuing..."; sleep 10)
 	@echo ""
-	@echo "🔟  Syncing Python dependencies..."
+	@echo "1️⃣0️⃣  Syncing Python dependencies..."
 	@uv sync
 	@echo ""
 	@echo "1️⃣1️⃣  Starting STAC API server..."
