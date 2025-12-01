@@ -24,6 +24,9 @@ echo "y" | make setup
 ```
 
 > **Note:** First-time setup takes **5-10 minutes**. Subsequent runs are faster.
+>
+![out2](https://github.com/user-attachments/assets/43d368fb-47f5-4c53-bfe4-21d0d61b72df)
+
 
 ---
 
