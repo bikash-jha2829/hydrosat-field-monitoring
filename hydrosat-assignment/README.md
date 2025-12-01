@@ -1,73 +1,77 @@
-# Steps to Run the Project
+# 🛰️ Hydrosat Field Monitoring Pipeline
 
-## Overview
+**Processing Sentinel-2 satellite imagery to compute spectral indices (NDVI & NDMI) for plantation fields and publish results to a STAC catalog.**
 
-This guide will walk you through setting up and running the Hydrosat Field Monitoring pipeline.
+This pipeline uses **Dagster** for orchestration, **Kubernetes (k3d)** for deployment, and **MinIO** for S3-compatible storage.
 
-This project processes Sentinel-2 satellite imagery, computes spectral indices (NDVI and NDMI) for plantation fields, and publishes results to a STAC catalog. The pipeline uses Dagster for orchestration, Kubernetes (k3d) for deployment, and MinIO for S3-compatible storage.
+---
 
-<!-- TOC -->
+## ⚡ Quick Start
 
-* [Steps to Run the Project](#steps-to-run-the-project)
-  * [Overview](#overview)
-  * [Prerequisites](#prerequisites)
-  * [Setup Instructions](#setup-instructions)
-  * [Running the Project](#running-the-project)
-  * [Accessing Services](#accessing-services)
-  * [Developer Notes](#developer-notes)
-  * [Output Files](#output-files)
-  * [Troubleshooting](#troubleshooting)
-
-<!-- TOC -->
-
-## Prerequisites
-
-- [ ] **Python 3.11+**: Ensure that Python 3.11 or 3.12 is installed on your machine
-- [ ] **Docker**: Required for MinIO and containerized services
-- [ ] **Docker Compose**: For running MinIO locally
-- [ ] **kubectl**: Kubernetes command-line tool
-- [ ] **k3d**: Kubernetes in Docker (for local cluster)
-- [ ] **Terraform**: For infrastructure deployment
-- [ ] **uv**: Python package manager (will be installed automatically if missing)
-
-### Installing Prerequisites
-
-If any prerequisites are missing, follow these installation instructions:
-
-#### Python 3.11+
+Got everything installed? Launch in 30 seconds:
 
 ```bash
-# macOS (using Homebrew)
-brew install python@3.11
+# 1. Clone & Install dependencies
+git clone <repository-url>
+cd hydrosat-assignment
+uv sync --all-groups
 
-# Linux (Ubuntu/Debian)
-sudo apt-get update
-sudo apt-get install python3.11 python3.11-venv
+# 2. Launch everything (MinIO, K8s, Dagster, STAC API)
+echo "y" | make setup
 
-# Verify installation
+# 3. Open Mission Control
+# Navigate to http://localhost:30080 in your browser
+```
+
+> **Note:** First-time setup takes **5-10 minutes**. Subsequent runs are faster.
+
+---
+
+## 🧰 Prerequisites
+
+**Required Tools:**
+- 🐍 **Python 3.11+**
+- 🐳 **Docker** (OrbStack or Docker Desktop)
+- ☸️ **k3d** & **kubectl**
+- 🏗️ **Terraform**
+- 📦 **uv** (auto-installed if missing)
+
+<details>
+<summary><strong>🔻 Installation Guides (click if missing tools)</strong></summary>
+
+### Python 3.11+
+
+```bash
 python3.11 --version
 ```
 
-#### Docker
+### Docker
+
+**macOS (OrbStack recommended):**
+```bash
+brew install --cask orbstack
+docker --version
+```
+
+**Linux:**
+```bash
+sudo apt-get update
+sudo apt-get install docker.io docker-compose
+```
+
+### k3d
 
 ```bash
 # macOS
-# Download Docker Desktop from https://www.docker.com/products/docker-desktop
-# Or use Homebrew:
-brew install --cask docker
+brew install k3d
 
-# Linux (Ubuntu/Debian)
-sudo apt-get update
-sudo apt-get install docker.io docker-compose
-sudo systemctl start docker
-sudo systemctl enable docker
-
-# Verify installation
-docker --version
-docker compose version
+# Linux
+curl -s https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh | bash
 ```
 
-#### kubectl
+### kubectl
+
+**Required even when using k3d** - k3d creates the cluster, but you'll use kubectl to interact with it.
 
 ```bash
 # macOS
@@ -76,371 +80,186 @@ brew install kubectl
 # Linux
 curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
 sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
-
-# Verify installation
-kubectl version --client
 ```
 
-#### k3d
+### Terraform
+
+**Reference:** [Official Installation Guide](https://developer.hashicorp.com/terraform/tutorials/aws-get-started/install-cli)
 
 ```bash
 # macOS
-brew install k3d
-
-# Linux
-curl -s https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh | bash
-
-# Verify installation
-k3d version
-```
-
-#### Terraform
-
-```bash
-# macOS
-brew install terraform
+brew tap hashicorp/tap
+brew install hashicorp/tap/terraform
 
 # Linux
 wget -O- https://apt.releases.hashicorp.com/gpg | sudo gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg
 echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/hashicorp.list
 sudo apt update && sudo apt install terraform
-
-# Verify installation
-terraform version
 ```
 
-#### uv (Python Package Manager)
+### uv (Python Package Manager)
 
 ```bash
-# macOS and Linux
 curl -LsSf https://astral.sh/uv/install.sh | sh
-
-# Or using pip
-pip install uv
-
-# Verify installation
-uv --version
+# Or: pip install uv
 ```
 
-## Setup Instructions
+</details>
+
+---
+
+## 🚀 Setup & Launch
 
 ### 1. Install Dependencies
 
-The project uses `uv` for dependency management. If you don't have `uv` installed, it will be installed automatically during setup.
-
 ```bash
-# Clone the repository (if not already done)
 git clone <repository-url>
 cd hydrosat-assignment
-
-# Install Python dependencies (including dev and notebook groups)
 uv sync --all-groups
 ```
 
-### 2. Configure Environment Variables
+### 2. Configure Environment (Optional)
 
-Create a `.env` file in the project root (optional - defaults work fine):
+The `.env` file configures Kubernetes, MinIO, S3, and Dagster settings. Default values in `Makefile` work out-of-the-box, so creating `.env` is **optional**.
 
-```bash
-# MinIO Configuration
-MINIO_ROOT_USER=minioadmin
-MINIO_ROOT_PASSWORD=minioadmin
+**Location:** Create `.env` in project root (same directory as `Makefile`) if you want to customize.
 
-# Kubernetes Configuration
-K3D_CLUSTER_NAME=local-hydrosat-cluster
-K8S_DAGSTER_NAMESPACE=dagster
-
-# Dagster Configuration
-DAGSTER_PARTITION_START_DATE=2025-10-01
-CLOUD_COVER_THRESHOLD=30
-
-# S3 Configuration
-AWS_S3_PIPELINE_BUCKET_NAME=hydrosat-pipeline-insights
-AWS_S3_ENDPOINT=http://localhost:9000
-AWS_ACCESS_KEY_ID=minioadmin
-AWS_SECRET_ACCESS_KEY=minioadmin
-AWS_REGION=us-east-1
-
-# STAC API
-STAC_API_URL=http://localhost:8000
-```
-
-### 3. Complete Setup
-
-Run the setup command to initialize all services:
+### 3. Launch Infrastructure
 
 ```bash
+# Interactive mode
 make setup
+
+# Non-interactive (auto-confirm)
+echo "y" | make setup
 ```
 
-This command will:
-1. Start MinIO (S3-compatible storage)
-2. Load sample field data to S3
-3. Initialize k3d Kubernetes cluster
-4. Build and deploy Dagster to Kubernetes
-5. Start STAC API server
+**What `make setup` does:**
+1. Starts MinIO (S3 storage)
+2. Creates k3d Kubernetes cluster
+3. Builds Dagster Docker image
+4. Creates Kubernetes namespace & configs
+5. Initializes Terraform
+6. Loads sample field data to S3
+7. Deploys Dagster via Helm
+8. Starts STAC API server
 
-**Note:** First-time setup takes 5-10 minutes.
-
-## Running the Project
-
-### Option 1: Full Kubernetes Deployment (Recommended)
-
-After running `make setup`, the pipeline is automatically running in Kubernetes:
+### 4. Verify Deployment
 
 ```bash
-# Check status of all services
 make status
-
-# View Dagster UI (Kubernetes deployment)
-# Open browser to http://localhost:30080
 ```
 
-**Note**: When running via Kubernetes, Dagster UI is accessible on port **30080**, not 3000.
+### 5. Access Services
 
-### Option 2: Local Development Mode
+| Service | URL | Credentials |
+|---------|-----|-------------|
+| **Dagster UI** | http://localhost:30080 | N/A |
+| **MinIO Console** | http://localhost:9001 | `minioadmin` / `minioadmin` |
+| **MinIO API** | http://localhost:9000 | `minioadmin` / `minioadmin` |
+| **STAC API** | http://localhost:8000 | N/A |
+| **STAC API Docs** | http://localhost:8000/docs | N/A |
 
-For local development and testing:
+**Note:** Dagster UI port is configured in `iac/scripts/config.sh` (default: `30080`). Override via `DAGSTER_UI_PORT` in `.env`.
 
-```bash
-# Start Dagster dev server
-make dev
-```
+---
 
-This starts Dagster in development mode on `http://localhost:3000` (different from Kubernetes deployment).
+## 🕹️ Operations Guide
 
-### Materializing Assets
+### The Data Workflow (Medallion Architecture)
 
-Once Dagster is running, you can materialize assets:
+Data flows through three stages:
 
-1. **Via Dagster UI**: 
-   - Kubernetes: Navigate to http://localhost:30080
-   - Dev Mode: Navigate to http://localhost:3000
-2. **Select Assets**: Choose `field_ndvi` or `field_ndmi` assets
-3. **Select Partitions**: Choose specific date/field combinations (e.g., `2025-10-11|field_1`)
-4. **Materialize**: Click "Materialize" to start processing
+1. **Raw → Staging:** Upload GeoJSON files to S3
+2. **Staging → Processed:** `bbox` and `fields` assets **automatically** materialize when new files are detected
+3. **Processed → Insights:** **Manually** trigger `field_ndvi` and `field_ndmi` computation
+
+### Computing Spectral Indices (NDVI/NDMI)
+
+1. **Open Dagster UI**: http://localhost:30080
+2. **Navigate** to `field_ndvi` or `field_ndmi` asset
+3. **Check Valid Dates**: Refer to `valid_sentinel_partitions.txt` for dates with Sentinel-2 coverage
+4. **Select Partitions**:
+   - Single: `2025-10-11|all` (one date, all fields)
+   - Multiple: Select multiple date/field combinations
+5. **Click Materialize**
+
+**Success!** 🎉
+- ✅ Results written to S3: `pipeline-outputs/{date}/{field_id}/ndvi.parquet` and `ndmi.parquet`
+- ✅ STAC catalog updated: `catalog/` directory with new items
+- ✅ Queryable via STAC API: `/collections/field-indices/items`
+
+**Verify:**
+- Dagster UI shows "Materialized" status
+- Files appear in S3 `pipeline-outputs/` directory
+- New items in STAC API
 
 ### Auto-Materialization
 
-The pipeline includes auto-materialization policies:
-- `bbox` and `fields` assets auto-materialize when new data arrives
-- `field_ndvi` and `field_ndmi` can be configured for auto-materialization
+**Automatic:**
+- ✅ **`bbox` asset**: Auto-materializes when data uploaded to `raw_catalog/bbox/staging/`
+- ✅ **`fields` asset**: Auto-materializes when data uploaded to `raw_catalog/fields/staging/`
 
-## Accessing Services
+**How It Works:**
+1. New GeoJSON files uploaded to S3 `staging/` directories
+2. Sensors detect new files
+3. Assets automatically materialize
+4. Data validated and moved `staging/` → `processed/`
+5. Ready for manual NDVI/NDMI trigger
 
-### Dagster UI
+**Manual Required:**
+- ⚙️ **`field_ndvi`**: Must be manually triggered (depends on satellite data availability)
+- ⚙️ **`field_ndmi`**: Must be manually triggered (depends on satellite data availability)
 
-**Kubernetes Deployment (via `make setup`)**:
-- **URL**: http://localhost:30080
-- **Example**: http://localhost:30080/runs/b/jzllinjo?tab=runs
-- **Purpose**: Monitor pipeline execution, view assets, materialize partitions
+### Adding New Data
 
-**Development Mode (via `make dev`)**:
-- **URL**: http://localhost:3000
-- **Purpose**: Local development with hot-reload
+Need to analyze new fields?
 
-**Features**: 
-- Asset graph visualization
-- Partition management
-- Run history and logs
-- Sensor status
-- Materialize assets and partitions
-
-### MinIO Console
-
-- **URL**: http://localhost:9001
-- **Username**: `minioadmin`
-- **Password**: `minioadmin`
-- **Purpose**: Browse S3 buckets, view processed data, manage buckets
-
-**Access Steps**:
-1. Open http://localhost:9001 in your browser
-2. Enter username: `minioadmin`
-3. Enter password: `minioadmin`
-4. Click "Login"
-
-**Buckets**:
-- `hydrosat-pipeline-insights`: Main data bucket
-  - `raw_catalog/`: Field geometries and bounding boxes
-  - `pipeline-outputs/`: Processed spectral index data
-  - `catalog/`: STAC catalog files
-
-**MinIO API Access (S3-compatible)**:
-- **Endpoint**: http://localhost:9000
-- **Access Key**: `minioadmin`
-- **Secret Key**: `minioadmin`
-- **Region**: `us-east-1` (default)
-
-### STAC API
-
-- **URL**: http://localhost:8000
-- **Purpose**: Query processed field data via STAC endpoints
-- **Endpoints**:
-  - `GET /collections/field-indices/items`: List all items
-  - `POST /search`: Search with filters
-
-### Kubernetes Dashboard
-
-Access via kubectl proxy:
-
-```bash
-kubectl proxy
-# Then open http://localhost:8001/api/v1/namespaces/kubernetes-dashboard/services/https:kubernetes-dashboard:/proxy/
-```
-
-## Developer Notes
-
-### Project Structure
-
-```
-hydrosat-assignment/
-├── src/plantation_monitoring/
-│   ├── assets.py              # Dagster assets (bbox, fields, field_ndvi, field_ndmi)
-│   ├── connectors/            # S3, STAC, Settings resources
-│   ├── geospatial/            # Raster operations, STAC publishing
-│   ├── models/                 # Pydantic models (Bbox, Field, NDVI, NDMI)
-│   ├── storage.py              # S3 I/O operations
-│   ├── api/                    # FastAPI STAC API
-│   └── triggers/               # Sensors and jobs
-├── iac/
-│   ├── docker/                 # Docker Compose for MinIO
-│   ├── k8s/                    # Kubernetes manifests
-│   ├── terraform/              # Infrastructure as Code
-│   └── scripts/                # Setup and utility scripts
-├── tests/                       # Unit tests
-├── field_analysis.ipynb        # Jupyter notebook for analysis
-├── Makefile                    # Main commands
-└── pyproject.toml              # Project dependencies
-```
-
-### Configuration Files
-
-**`src/plantation_monitoring/connectors/settings.py`**
-- Centralized configuration management
-- Environment variable resolution
-- Default values for development
-
-**`src/plantation_monitoring/config/constants.py`**
-- S3 path prefixes
-- Default thresholds and dates
-- Band preferences for spectral indices
-
-### Key Environment Variables
-
-- `DAGSTER_PARTITION_START_DATE`: Start date for daily partitions (default: `2025-10-01`)
-- `CLOUD_COVER_THRESHOLD`: Maximum cloud cover percentage (default: `30`)
-- `AWS_S3_PIPELINE_BUCKET_NAME`: S3 bucket name (default: `hydrosat-pipeline-insights`)
-- `AWS_S3_ENDPOINT`: S3 endpoint URL (default: `http://localhost:9000` for MinIO)
-
-### Common Commands
-
-```bash
-# Check service status
-make status
-
-# Update after code changes
-make k8s-update
-
-# Restart MinIO (if connection issues)
-make minio-restart
-
-# Load sample data to S3
-make s3-load
-
-# Stop all services (keeps data)
-make stop
-
-# Complete cleanup (⚠️ Destructive!)
-make clean-all
-
-# Start STAC API
-make stac-api-start
-
-# Stop STAC API
-make stac-api-stop
-```
-
-### Code Changes Workflow
-
-1. **Make code changes** in `src/plantation_monitoring/`
-2. **Update deployment**:
+1. **Place GeoJSON files**:
    ```bash
-   make k8s-update
+   # Bounding boxes
+   sample_data/s3/raw_catalog/bbox/staging/bbox.geojson
+   
+   # Field geometries (name: fields-*.geojson)
+   sample_data/s3/raw_catalog/fields/staging/fields-*.geojson
    ```
-   This rebuilds the Docker image and updates the Kubernetes deployment.
 
-3. **Verify changes**:
-   - Check Dagster UI for updated code
-   - View logs: `kubectl logs -n dagster -l app=dagster`
+2. **Load to S3**:
+   ```bash
+   make s3-load
+   ```
 
-### Testing
+3. **Watch sensors** automatically pick up files and materialize `bbox` and `fields` assets!
 
-Run unit tests:
+---
 
-```bash
-# Run all tests
-pytest tests/
+## 📂 Output Structure
 
-# Run specific test file
-pytest tests/test_storage.py
+All data in `hydrosat-pipeline-insights` S3 bucket:
 
-# Run with coverage
-pytest --cov=src tests/
-```
+### 1. Raw Catalog (`raw_catalog/`)
 
-### Linting and Formatting
-
-```bash
-# Run all checks
-./run_checks.sh
-
-# Or individually:
-ruff format .
-ruff check .
-mypy src/
-```
-
-## Output Files
-
-After the pipeline successfully processes data, you will find the following structure in the S3 bucket (`hydrosat-pipeline-insights`):
-
-### 1. Raw Catalog Directory
-
-**Location**: `raw_catalog/`
-
-Contains input data for the pipeline:
-
-- **`bbox/`**: Bounding box geometries (GeoJSON)
+Input data:
+- **`bbox/`**: Bounding box geometries
   - `staging/`: Newly uploaded files
-  - `processed/`: Processed and validated files
-  
-- **`fields/`**: Field geometries (GeoJSON)
+  - `processed/`: Validated files
+- **`fields/`**: Field geometries
   - `staging/`: Newly uploaded files
-  - `processed/`: Processed and validated files
+  - `processed/`: Validated files
 
-- **`config/`**: Configuration files
-  - `bbox.geojson`: Fallback bounding box
+### 2. Pipeline Outputs (`pipeline-outputs/`)
 
-### 2. Pipeline Outputs Directory
-
-**Location**: `pipeline-outputs/`
-
-Contains processed spectral index data:
+Processed spectral indices:
 
 ```
 pipeline-outputs/
 ├── 2025-10-11/
 │   ├── field_1/
-│   │   ├── ndvi.parquet          # NDVI data with field geometry
-│   │   └── ndmi.parquet          # NDMI data with field geometry
-│   ├── field_2/
-│   │   ├── ndvi.parquet
+│   │   ├── ndvi.parquet    # GeoJSON + Stats + Metadata
 │   │   └── ndmi.parquet
-│   └── field_3/
+│   └── field_2/
 │       ├── ndvi.parquet
 │       └── ndmi.parquet
-├── 2025-10-16/
-│   └── ...
 └── ...
 ```
 
@@ -450,20 +269,17 @@ Each Parquet file contains:
 - Valid pixel counts
 - Field metadata (field_id, plant_type, plant_date)
 
-### 3. STAC Catalog Directory
+### 3. STAC Catalog (`catalog/`)
 
-**Location**: `catalog/`
-
-Contains the STAC catalog structure:
+Standardized catalog structure:
 
 ```
 catalog/
-├── catalog.json                  # Root catalog
-├── collection.json              # Field indices collection
+├── catalog.json
+├── collection.json
 └── items/
     ├── field_1_2025-10-11_ndvi.json
     ├── field_1_2025-10-11_ndmi.json
-    ├── field_2_2025-10-11_ndvi.json
     └── ...
 ```
 
@@ -473,110 +289,126 @@ Each STAC item includes:
 - Links to data assets (S3 paths)
 - Geometry and bounding box
 
-## Troubleshooting
+---
+
+## 👩‍💻 Developer Notes
+
+### Project Structure
+
+```
+hydrosat-assignment/
+├── src/plantation_monitoring/   # Assets, sensors, logic
+├── iac/                         # K8s, Terraform, scripts
+├── tests/                        # Unit tests
+├── field_analysis.ipynb          # Analysis notebook
+└── Makefile                      # Command center
+```
+
+### Development Mode
+
+Run Dagster locally (no Kubernetes overhead):
+
+```bash
+make dev
+# Runs on http://localhost:3000
+```
+
+### Key Commands
+
+```bash
+make status          # Check all services
+make k8s-update      # Apply code changes to cluster
+make minio-restart   # Fix storage connection issues
+make s3-load         # Load new data to S3
+make stac-api-start  # Start STAC API server
+make stop            # Pause services (keeps data)
+make clean-all       # ⚠️ Nuke everything (destructive!)
+```
+
+### Code Changes Workflow
+
+1. Make changes in `src/plantation_monitoring/`
+2. Update deployment: `make k8s-update`
+3. Verify in Dagster UI
+
+### Testing & Linting
+
+```bash
+# Run tests
+pytest tests/
+
+# Linting
+# Uses ruff for formatting/linting, mypy for type checking
+```
+
+### Kubernetes Commands
+
+**List Pods:**
+```bash
+kubectl get pods -n dagster
+kubectl get pods -n dagster -o wide
+kubectl get pods -n dagster -w  # Watch
+```
+
+**View Logs:**
+```bash
+kubectl logs -n dagster <POD_NAME>
+kubectl logs -n dagster <POD_NAME> -f  # Follow
+kubectl logs -n dagster -l app.kubernetes.io/name=dagster
+```
+
+**Common Pod Names:**
+- `dagster-webserver-*`: UI server
+- `dagster-daemon-*`: Daemon process
+- `dagster-worker-*`: Worker pods
+
+---
+
+## 🔧 Troubleshooting
 
 ### MinIO Connection Issues
 
 ```bash
-# Restart MinIO
 make minio-restart
-
-# Check MinIO logs
-docker compose -f iac/docker/docker-compose.yml logs minio
-
-# Verify MinIO is running
-curl http://localhost:9000/minio/health/live
 ```
 
-### Dagster Pod Not Starting
+### Dagster Pods Not Starting
 
 ```bash
-# Check pod status
 kubectl get pods -n dagster
-
-# View pod logs
-kubectl logs -n dagster -l app=dagster
-
-# Describe pod for events
+kubectl logs -n dagster -l app=dagster --tail=50 -f
 kubectl describe pod -n dagster <pod-name>
-
-# Restart deployment
-kubectl rollout restart deployment/dagster -n dagster
 ```
 
 ### S3 Access Errors
 
-```bash
-# Verify credentials in Kubernetes secret
-kubectl get secret dagster-secret -n dagster -o yaml
-
-# Check environment variables
-kubectl exec -n dagster <pod-name> -- env | grep AWS
-
-# Verify MinIO credentials match
-# Should be: minioadmin/minioadmin (default)
-```
+Verify credentials match MinIO defaults (`minioadmin`/`minioadmin`).
 
 ### Partition Materialization Failing
 
-1. **Check asset logs** in Dagster UI
-2. **Verify field data exists**:
-   ```bash
-   # List fields in S3
-   aws --endpoint-url=http://localhost:9000 s3 ls s3://hydrosat-pipeline-insights/raw_catalog/fields/processed/
-   ```
-3. **Check Sentinel-2 data availability**:
-   - Verify date has available imagery
-   - Check cloud cover threshold
-   - Ensure required bands are available
+1. Check asset logs in Dagster UI
+2. Verify field data exists in S3 `raw_catalog/fields/processed/`
+3. Check Sentinel-2 data availability for selected date
+4. Verify cloud cover threshold (default: 30%)
 
 ### STAC API Not Responding
 
 ```bash
-# Check if STAC API is running
-ps aux | grep uvicorn
-
-# Start STAC API
 make stac-api-start
-
-# Check STAC API logs
 tail -f tmp/stac_api.log
-
-# Test STAC API
 curl http://localhost:8000/collections/field-indices/items?limit=5
 ```
 
 ### Clean Start
 
-If you encounter persistent issues:
-
 ```bash
-# Complete cleanup (⚠️ Removes all data!)
-make clean-all
-
-# Fresh setup
-make setup
-```
-
-### Viewing Logs
-
-```bash
-# Dagster logs
-kubectl logs -n dagster -l app=dagster --tail=100 -f
-
-# MinIO logs
-docker compose -f iac/docker/docker-compose.yml logs -f minio
-
-# All Kubernetes resources
-kubectl get all -n dagster
+make clean-all  # ⚠️ Removes all data!
+make setup      # Fresh start
 ```
 
 ### Accessing MinIO via AWS CLI
 
-You can also access MinIO using AWS CLI or boto3:
-
 ```bash
-# Configure AWS CLI for MinIO
 aws configure set aws_access_key_id minioadmin
 aws configure set aws_secret_access_key minioadmin
 aws configure set default.region us-east-1
@@ -584,46 +416,19 @@ aws configure set default.region us-east-1
 # List buckets
 aws --endpoint-url=http://localhost:9000 s3 ls
 
-# List objects in bucket
+# List objects
 aws --endpoint-url=http://localhost:9000 s3 ls s3://hydrosat-pipeline-insights/
-
-# Copy file from MinIO
-aws --endpoint-url=http://localhost:9000 s3 cp s3://hydrosat-pipeline-insights/path/to/file ./
 ```
-
-## What Happens After Running?
-
-After running the pipeline and materializing assets:
-
-1. **Data Processing**:
-   - Field geometries are loaded from S3
-   - Sentinel-2 imagery is queried from Planetary Computer
-   - Spectral indices (NDVI and NDMI) are computed
-   - Results are saved as GeoParquet files
-
-2. **STAC Catalog Updates**:
-   - STAC items are created for each processed field/date/index combination
-   - Catalog structure is maintained in S3
-   - Metadata enables efficient querying
-
-3. **Data Availability**:
-   - Processed data accessible via S3/MinIO
-   - STAC API provides query interface
-   - Jupyter notebook enables analysis and visualization
-
-4. **Monitoring**:
-   - Dagster UI shows execution status
-   - Asset materialization history
-   - Partition status and run logs
-
-## Next Steps
-
-- **Query Data**: Use the STAC API to query processed field data
-- **Analyze Results**: Open `field_analysis.ipynb` for visualization
-- **Materialize More Partitions**: Use Dagster UI to process additional dates/fields
-- **Monitor Health**: Check Dagster UI for pipeline status and asset health
 
 ---
 
-For detailed API usage, see the STAC API documentation. For analysis examples, see `field_analysis.ipynb`.
+## 🔮 Next Steps
 
+1. **Query Data**: Use STAC API to query processed field data
+2. **Visualize**: Open `field_analysis.ipynb` for charts and analysis
+3. **Scale**: Add more fields and watch Dagster process them
+4. **Monitor**: Check Dagster UI for pipeline status and asset health
+
+---
+
+For detailed API usage, see STAC API docs at http://localhost:8000/docs. For analysis examples, see `field_analysis.ipynb`.
