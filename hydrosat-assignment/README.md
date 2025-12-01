@@ -135,14 +135,64 @@ echo "y" | make setup
 ```
 
 **What `make setup` does:**
-1. Starts MinIO (S3 storage)
-2. Creates k3d Kubernetes cluster
-3. Builds Dagster Docker image
-4. Creates Kubernetes namespace & configs
-5. Initializes Terraform
-6. Loads sample field data to S3
-7. Deploys Dagster via Helm
-8. Starts STAC API server
+This command performs a comprehensive setup that includes:
+
+1. **Start MinIO** (S3-compatible storage)
+   - Launches MinIO Docker container
+   - Accessible at http://localhost:9000 (API) and http://localhost:9001 (Console)
+   - **Username**: `minioadmin`
+   - **Password**: `minioadmin`
+
+2. **Create k3d Kubernetes Cluster**
+   - Initializes a local Kubernetes cluster using k3d
+   - Configures port forwarding for Dagster UI (port 30080)
+
+3. **Build Dagster Docker Image**
+   - Builds custom Dagster image with project code
+   - Imports image into k3d cluster
+
+4. **Create Kubernetes Namespace**
+   - Creates `dagster` namespace for organizing resources
+
+5. **Apply Kubernetes Configurations**
+   - Applies ConfigMap (environment variables)
+   - Applies Secret (credentials and sensitive data)
+
+6. **Initialize Terraform**
+   - Downloads required Terraform providers (Kubernetes, Helm, MinIO)
+   - Prepares Terraform state
+
+7. **Import Existing Resources**
+   - Imports existing Kubernetes namespace into Terraform state
+   - Imports existing S3 bucket (if present) into Terraform state
+
+8. **Load Sample Data to S3**
+   - Uploads field geometries (GeoJSON files) to S3
+   - Uploads bounding box data to S3
+   - Data is loaded to `raw_catalog/fields/` and `raw_catalog/bbox/` prefixes
+   - **Note**: This happens before Terraform creates the bucket, but the bucket will be created by Terraform if it doesn't exist
+
+9. **Deploy Infrastructure with Terraform**
+   - **Creates S3 bucket** (`hydrosat-pipeline-insights`) in MinIO
+   - Creates Kubernetes namespace (managed by Terraform)
+   - Creates MinIO ExternalName service (routes Kubernetes to host MinIO)
+   - **Deploys Dagster via Helm chart** (includes webserver, daemon, and worker pods)
+   - Configures all Kubernetes resources
+
+10. **Wait for Dagster Pods**
+   - Waits up to 5 minutes for all Dagster pods to be ready
+   - Ensures services are operational before proceeding
+   - **Dagster UI**: http://localhost:30080 (available once pods are ready)
+
+11. **Sync Python Dependencies**
+    - Installs/updates Python packages using `uv sync`
+
+12. **Start STAC API Server**
+    - Launches FastAPI server for querying STAC catalog
+    - Accessible at http://localhost:8000
+    - API documentation at http://localhost:8000/docs
+
+**Note:** First-time setup takes 5-10 minutes. Subsequent runs are faster as resources are reused.
 
 ### 4. Verify Deployment
 
@@ -168,6 +218,8 @@ make status
 
 ### The Data Workflow (Medallion Architecture)
 
+
+
 Data flows through three stages:
 
 1. **Raw → Staging:** Upload GeoJSON files to S3
@@ -176,13 +228,23 @@ Data flows through three stages:
 
 ### Computing Spectral Indices (NDVI/NDMI)
 
-1. **Open Dagster UI**: http://localhost:30080
-2. **Navigate** to `field_ndvi` or `field_ndmi` asset
-3. **Check Valid Dates**: Refer to `valid_sentinel_partitions.txt` for dates with Sentinel-2 coverage
-4. **Select Partitions**:
-   - Single: `2025-10-11|all` (one date, all fields)
-   - Multiple: Select multiple date/field combinations
-5. **Click Materialize**
+1. **Open Dagster UI**:
+   - Kubernetes: http://localhost:30080
+   - Dev Mode: http://localhost:3000
+
+2. **Check Valid Dates**: Refer to `valid_sentinel_partitions.txt` for dates where Sentinel-2 has coverage for your AOI (Area of Interest)
+
+3. **Select Partitions**: Choose date/field combinations:
+   - Single: `2025-10-11|all` (one date, all field)
+   - Multiple dates: Select multiple date/field combinations
+
+4. **Materialize**: Click "Materialize" on `field_ndvi` and `field_ndmi` assets
+
+**What Happens After Materialization:**
+
+- ✅ Processed outputs are written to S3: `pipeline-outputs/{date}/{field_id}/ndvi.parquet` and `ndmi.parquet`
+- ✅ STAC catalog is updated on S3: `catalog/` directory with new items
+- ✅ Materialized assets appear in the catalog and can be queried via STAC API
 
 **Success!** 🎉
 - ✅ Results written to S3: `pipeline-outputs/{date}/{field_id}/ndvi.parquet` and `ndmi.parquet`
@@ -196,20 +258,27 @@ Data flows through three stages:
 
 ### Auto-Materialization
 
-**Automatic:**
-- ✅ **`bbox` asset**: Auto-materializes when data uploaded to `raw_catalog/bbox/staging/`
-- ✅ **`fields` asset**: Auto-materializes when data uploaded to `raw_catalog/fields/staging/`
+The pipeline includes **automatic materialization** for certain assets:
+
+**Auto-Materialized Assets:**
+- ✅ **`bbox` asset**: Automatically materializes when new bounding box data is uploaded to `raw_catalog/bbox/staging/`
+- ✅ **`fields` asset**: Automatically materializes when new field geometry data is uploaded to `raw_catalog/fields/staging/`
 
 **How It Works:**
-1. New GeoJSON files uploaded to S3 `staging/` directories
-2. Sensors detect new files
-3. Assets automatically materialize
-4. Data validated and moved `staging/` → `processed/`
-5. Ready for manual NDVI/NDMI trigger
+1. New GeoJSON files are uploaded to S3 `staging/` directories
+2. Sensors detect the new files
+3. `bbox` and `fields` assets automatically materialize
+4. Data is validated and moved from `staging/` → `processed/`
+5. Once fields are processed, you can manually trigger `field_ndvi` and `field_ndmi` materialization
 
-**Manual Required:**
-- ⚙️ **`field_ndvi`**: Must be manually triggered (depends on satellite data availability)
-- ⚙️ **`field_ndmi`**: Must be manually triggered (depends on satellite data availability)
+**Manual Materialization Required:**
+- ⚙️ **`field_ndvi` asset**: Must be manually triggered via Dagster UI
+- ⚙️ **`field_ndmi` asset**: Must be manually triggered via Dagster UI
+
+**Note**: NDVI and NDMI require manual selection of partitions (dates/fields) because they depend on:
+- Sentinel-2 satellite data availability
+- Cloud cover conditions
+- User's specific analysis needs
 
 ### Adding New Data
 
